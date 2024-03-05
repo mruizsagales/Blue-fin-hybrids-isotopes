@@ -115,7 +115,9 @@ for (i in 1:length(unique(selected_rows$Whale))) {
 }
 combined_df_fin_blue_hybrids
 
+ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_point()
 ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_point()
+ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_point()
 
 # 3. Suess and Laws effect correction
 
@@ -260,28 +262,28 @@ nsample <- 1000
 # ---- Use map from purrr and niw.post from nicheROVER to estimate niches ----- 
 fish_par <- data_per_niche_rover_NA_out %>% 
   split(.$species) %>% 
-  map(~ select(., D15N, D13C, D34S)) %>% 
+  map(~ dplyr::select(., D15N, D13C, D34S)) %>% 
   map(~niw.post(nsample = nsample, X = .))
 
 
 # ---- Extract mu from nicheROVER object ----- 
 df_mu <- map(fish_par, pluck, 1) %>% 
   imap(~ as_tibble(.x) %>% 
-         mutate( 
+         dplyr::mutate( 
            metric = "mu", 
            species = .y
          )
   ) %>%
-  bind_rows() %>% 
-  mutate(
+  dplyr::bind_rows() %>% 
+  dplyr::mutate(
     species = factor(species, 
                      levels = c("fin", "hybrid"))
   ) %>% 
-  group_by(species) %>% 
-  mutate(
+  dplyr::group_by(species) %>% 
+  dplyr::mutate(
     sample_number = 1:1000
   ) %>% 
-  ungroup()
+  dplyr::ungroup()
 
 
 
@@ -290,13 +292,13 @@ df_mu_long <- df_mu %>%
   pivot_longer(cols = -c(metric, species, sample_number), 
                names_to = "isotope", 
                values_to = "mu_est") %>% 
-  mutate(
-    element = case_when(
+  dplyr::mutate(
+    element =  dplyr::case_when(
       isotope == "D15N" ~ "N",
       isotope == "D13C" ~ "C",
       isotope == "D34S" ~ "S",
     ), 
-    neutron = case_when(
+    neutron =  dplyr::case_when(
       isotope == "D15N" ~ 15,
       isotope == "D13C" ~ 13,
       isotope == "D34S" ~ 34,
@@ -307,13 +309,13 @@ df_mu_long <- df_mu %>%
 
 df_sigma <- map(fish_par, pluck, 2) %>%
   imap(~ as_tibble(.x) %>%
-         mutate(
+         dplyr::mutate(
            metric = "sigma",
            id = c("D15N", "D13C","D34S"),
            species = .y
          )
   ) %>%
-  bind_rows() %>%
+  dplyr::bind_rows() %>%
   pivot_longer(cols = -c("id", "species", "metric"),
                names_to = "isotope",
                values_to = "post_sample"
@@ -323,7 +325,7 @@ df_sigma <- map(fish_par, pluck, 2) %>%
 
 
 df_sigma_cn <- df_sigma %>%
-  filter(id != isotopes)
+  dplyr::filter(id != isotopes)
 
 # ---- Plot posterior samples for mu estimates from nicheROver ----- 
 posterior_plots <- df_mu_long %>%
@@ -472,10 +474,10 @@ for (i in 1:length(species_name)) {
 }
 
 # ---- Combine ellipse list into dataframe and add species names back in -----
-ellipse_df_NC <- bind_rows(all_ellipses_NC, .id = "id") %>% 
-  mutate(
+ellipse_df_NC <-  dplyr::bind_rows(all_ellipses_NC, .id = "id") %>% 
+  dplyr::mutate(
     species = factor(
-      case_when(
+      dplyr::case_when(
         id == "1" ~ "fin",
         id == "2" ~ "hybrid"
       ), level = c("fin", "hybrid")
@@ -486,11 +488,11 @@ ellipse_df_NC <- bind_rows(all_ellipses_NC, .id = "id") %>%
 # ---- Randomly sample 10 ellipse for plotting ----- 
 
 ellipse_df_NC %>% 
-  group_by(species, rep) %>% 
+  dplyr::group_by(species, rep) %>% 
   nest() %>%
-  group_by(species) %>% 
-  slice_sample(n = 10, replace = TRUE) %>% 
-  ungroup() %>% 
+  dplyr::group_by(species) %>% 
+  dplyr::slice_sample(n = 10, replace = TRUE) %>% 
+  dplyr::ungroup() %>% 
   unnest(cols = c(data)) -> random_ellipse_NC 
 
 
@@ -564,10 +566,10 @@ for (i in 1:length(species_name)) {
 }
 
 # ---- Combine ellipse list into dataframe and add species names back in -----
-ellipse_df_NS <- bind_rows(all_ellipses_NS, .id = "id") %>% 
-  mutate(
+ellipse_df_NS <-  dplyr::bind_rows(all_ellipses_NS, .id = "id") %>% 
+  dplyr::mutate(
     species = factor(
-      case_when(
+      dplyr::case_when(
         id == "1" ~ "fin",
         id == "2" ~ "hybrid"
       ), level = c("fin", "hybrid")
