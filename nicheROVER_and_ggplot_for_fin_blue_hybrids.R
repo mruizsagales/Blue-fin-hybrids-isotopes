@@ -819,11 +819,14 @@ iso_biplot_3 <- ggplot() +
        x = expression(paste(delta ^ 13, "C")))
 
 
-d15n_density + ellipse_plots_1 + ellipse_plots_2  + iso_biplot_1 + d13c_density + ellipse_plots_3 + iso_biplot_2 + iso_biplot_3 +  d34s_density +
+plot <- d15n_density + ellipse_plots_1 + ellipse_plots_2  + iso_biplot_1 + d13c_density + ellipse_plots_3 + iso_biplot_2 + iso_biplot_3 +  d34s_density +
   plot_annotation(tag_levels = "a", 
                   tag_suffix = ")")
 
 
+print(plot)
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/Figure_NicheRover_ggplot.png", plot, 
+       device = png(width = 600, height = 450))
 #####
 
 # ---- Estimate niche similarities with nicheROVER ----- 
