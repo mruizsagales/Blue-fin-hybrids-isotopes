@@ -115,9 +115,10 @@ for (i in 1:length(unique(selected_rows$Whale))) {
 }
 combined_df_fin_blue_hybrids
 
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_point()
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_point()
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_point()
+ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_line()
+ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_line()
+ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_line() #notar l'increment de so
+
 
 # 3. Suess and Laws effect correction
 
@@ -150,6 +151,33 @@ df <- fw.data_d13cor
 names(df) <- c("id","Cm","d15n","dC", "dS", "Whale_1","Whale","Sex","Status","Talla_fetus_(cm)","Sexe_fetus","Length","Talla_(peus)",          
 "Data_capt","Lat","Long","Edat","Year","species","days","rev_days","sample_date","year.x","year_rev","Year_from_sample_date","Year_month","Month_from_sample_date","region",                
 "year.y","d13c.uncor","Laws.cor","Suess.cor","net.cor","d13c")
+
+
+# 2. Statistics
+df_hybrids <- filter(df, species == "hybrid")
+df_fin <- filter(df, species == "fin")
+
+#Normality
+shapiro.test(df_hybrids$d15n)
+shapiro.test(df_hybrids$d13c)
+shapiro.test(df_hybrids$dS)
+
+library("car")
+dev.off()
+qqPlot(df_hybrids$d13c) #As all the points fall approximately along this reference line, we can assume normality.
+
+# Homoscedasticity 
+bartlett.test(d15n ~ species, df) #different
+bartlett.test(d13c ~ species, df)
+bartlett.test(dS ~ species, df)
+
+require(ggstatsplot)
+df$species <- as.factor(df$species)
+df$d15n <- as.double(df$d15n)
+a <- ggstatsplot::ggbetweenstats(data= df, x= species, y= d15n, pairwise.display = "ns")
+ggstatsplot::extract_stats(a)
+ggstatsplot::ggbetweenstats(data= df, x= species, y= d13c)
+ggstatsplot::ggbetweenstats(data= df, x= species, y= dS)
 
 ###################################################################################
 #fer-ho amb nicheROVER
@@ -509,8 +537,8 @@ ellipse_plots_1 <- ggplot() +
   scale_colour_viridis_d(begin = 0.25, end = 0.75, 
                          option = "D", name = "species",
   ) + 
-  scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
-  scale_y_continuous(breaks = seq(6, 16, 2)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
+  #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -601,8 +629,8 @@ ellipse_plots_2 <- ggplot() +
   scale_colour_viridis_d(begin = 0.25, end = 0.75, 
                          option = "D", name = "species",
   ) + 
-  scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
-  scale_y_continuous(breaks = seq(6, 16, 2)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
+  #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -692,8 +720,8 @@ ellipse_plots_3 <- ggplot() +
   scale_colour_viridis_d(begin = 0.25, end = 0.75, 
                          option = "D", name = "species",
   ) + 
-  scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
-  scale_y_continuous(breaks = seq(6, 16, 2)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
+  #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -763,8 +791,8 @@ iso_biplot_1 <- ggplot() +
   scale_color_viridis_d(begin = 0.25, end = 0.75,
                        option = "D", name = "species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D15N, y = D13C, fill=species, col=species), method="lm", alpha=0.5) +
-  scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
-  scale_y_continuous(breaks = seq(5, 17, 1)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
+  #scale_y_continuous(breaks = seq(5, 17, 1)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -785,8 +813,8 @@ iso_biplot_2 <- ggplot() +
   scale_color_viridis_d(begin = 0.25, end = 0.75,
                         option = "D", name = "species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D15N, y = D34S, fill=species, col=species), method="lm", alpha=0.5) +
-  scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
-  scale_y_continuous(breaks = seq(5, 17, 1)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
+  #scale_y_continuous(breaks = seq(5, 17, 1)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -807,8 +835,8 @@ iso_biplot_3 <- ggplot() +
   scale_color_viridis_d(begin = 0.25, end = 0.75,
                         option = "D", name = "species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D13C, y = D34S, fill=species, col=species), method="lm", alpha=0.5) +
-  scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
-  scale_y_continuous(breaks = seq(5, 17, 1)) +
+  #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
+  #scale_y_continuous(breaks = seq(5, 17, 1)) +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -840,7 +868,7 @@ over_stat_df <- over_stat %>%
   mutate(
     id = 1:nrow(.), 
     species_a = factor(species_a, 
-                       level = c("ARCS", "BDWF", "LKWF", "LSCS"))
+                       level = c("fin", "hybrid"))
   ) %>% 
   pivot_longer(cols = -c(id, species_a), 
                names_to = "species_b", 
@@ -851,7 +879,7 @@ over_stat_df <- over_stat %>%
   rename(species_b = species_c) %>% 
   mutate(
     species_b =  factor(species_b, 
-                        level = c("ARCS", "BDWF", "LKWF", "LSCS")
+                        level = c("fin", "hybrid")
     ), 
     mc_nr_perc = mc_nr * 100
   )
@@ -873,14 +901,18 @@ over_sum <- over_stat_df %>%
     percentage = as.numeric(str_remove(percentage, "qual_"))
   ) 
 
-
 # ---- plot niche similarities ----- 
+#we calculate the mean overlap metric between each species. Remember that the overlap metric is directional, 
+#such that it represents the probability that an individual from Species A will be found in the niche of Species B
+#Species A is along the rows and Species B is along columns. 
+#The plots represent the posterior probability that an individual from the species indicated by the row will be found within the niche of the species indicated by the column header
+
 ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
   geom_density(aes(fill = species_a)) + 
   geom_vline(data = over_sum, aes(xintercept = mean_mc_nr), 
              colour = "black", linewidth = 1) +
   geom_vline(data = over_sum, aes(xintercept = mc_nr_qual), 
-             colour = "black", linewidth = 1, linetype = 6) +
+             colour = "black", linewidth = 0.5, linetype = 2) +
   scale_fill_viridis_d(begin = 0.25, end = 0.75,
                        option = "D", name = "Species", 
                        alpha = 0.35) + 
@@ -947,6 +979,6 @@ ggplot(data = niche_size_df) +
   theme_bw(base_size = 15) + 
   theme(panel.grid = element_blank(), 
         axis.text = element_text(colour = "black")) + 
-  labs(x = "Species", 
+  labs(x = "", 
        y = "Niche Size") 
 
