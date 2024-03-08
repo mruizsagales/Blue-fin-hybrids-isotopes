@@ -172,12 +172,26 @@ bartlett.test(d13c ~ species, df)
 bartlett.test(dS ~ species, df)
 
 require(ggstatsplot)
+library(ggsignif)
 df$species <- as.factor(df$species)
 df$d15n <- as.double(df$d15n)
-a <- ggstatsplot::ggbetweenstats(data= df, x= species, y= d15n, pairwise.display = "ns")
-ggstatsplot::extract_stats(a)
 ggstatsplot::ggbetweenstats(data= df, x= species, y= d13c)
+ggstatsplot::ggbetweenstats(data= df, x= species, y= d15n)
 ggstatsplot::ggbetweenstats(data= df, x= species, y= dS)
+wilcox.test(df_hybrids$d15n,df_fin$d15n)
+
+result <- t.test(df_hybrids$d15n,df_fin$d15n, var.equal = FALSE)
+result
+
+result <- t.test(df_hybrids$d13c,df_fin$d13c, var.equal = FALSE)
+result
+
+result <- t.test(df_hybrids$dS,df_fin$dS, var.equal = FALSE)
+result
+
+# Calculate Hedges' g effect size
+library(effsize)
+hedges_g <- effsize::cohen.d(d = df$dS, f= df$species, method = "hedges")
 
 ###################################################################################
 #fer-ho amb nicheROVER
