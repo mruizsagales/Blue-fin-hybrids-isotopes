@@ -183,10 +183,10 @@ wilcox.test(df_hybrids$d15n,df_fin$d15n)
 result <- t.test(df_hybrids$d15n,df_fin$d15n, var.equal = FALSE)
 result
 
-result <- t.test(df_hybrids$d13c,df_fin$d13c, var.equal = FALSE)
+result <- t.test(df_hybrids$d13c,df_fin$d13c, var.equal = TRUE)
 result
 
-result <- t.test(df_hybrids$dS,df_fin$dS, var.equal = FALSE)
+result <- t.test(df_hybrids$dS,df_fin$dS, var.equal = TRUE)
 result
 
 # Calculate Hedges' g effect size
