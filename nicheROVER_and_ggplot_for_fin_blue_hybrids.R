@@ -429,7 +429,7 @@ posterior_plots <- df_mu_long %>%
   imap(
     ~ ggplot(data = ., aes(x = mu_est)) +
       geom_density(aes(fill = species), alpha = 0.5) +
-      scale_fill_brewer(palette = "RdYlBu", name = "Species") +
+      scale_fill_brewer(palette = "Set1", name = "Species") +
       #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
       theme_bw() +
       theme(panel.grid = element_blank(),
@@ -483,7 +483,7 @@ sigma_plots <- df_sigma_cn %>%
   imap(
     ~ ggplot(data = ., aes(x = post_sample)) +
       geom_density(aes(fill = species), alpha = 0.5) +
-      scale_fill_brewer(palette = "RdYlBu", name = "Species") +
+      scale_fill_brewer(palette = "Set1", name = "Species") +
       #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
       theme_bw() +
       theme(panel.grid = element_blank(),
@@ -693,7 +693,7 @@ ellipse_plots_2 <- ggplot() +
                fill = NA,
                linewidth = 0.5) + 
   
-  scale_color_brewer(palette = "RdYlBu", name = "Species") +
+  scale_color_brewer(palette = "Set1", name = "Species") +
   #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
   #scale_y_continuous(breaks = seq(6, 16, 2)) +
@@ -783,9 +783,8 @@ ellipse_plots_3 <- ggplot() +
                fill = NA,
                linewidth = 0.5) + 
   
-  scale_colour_viridis_d(begin = 0.25, end = 0.75, 
-                         option = "D", name = "species",
-  ) + 
+  scale_color_brewer(palette = "Set1", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
   #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
@@ -821,8 +820,8 @@ iso_density1 <- ggplot(data = iso_density1[[1]]) +
                    fill = species), 
                alpha = 0.35, 
                linewidth = 0.8) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
@@ -842,12 +841,12 @@ iso_density2 <- ggplot(data = iso_density2[[2]]) +
                    fill = species), 
                alpha = 0.35, 
                linewidth = 0.8) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   theme_bw(base_size = 10) +
   theme(axis.text = element_text(colour = "black"),
         panel.grid = element_blank(), 
-        legend.position = 'none', 
+        legend.position = c(0.15, 0.75), 
         legend.title.align = 0.5,
         legend.background = element_blank(), 
         axis.title.x = element_markdown(family = "sans")) + 
@@ -864,12 +863,12 @@ iso_density3 <- ggplot(data = iso_density3[[3]]) +
                        fill = species), 
                    alpha = 0.35, 
                    linewidth = 0.8) +
-      scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                           option = "D", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
       theme_bw(base_size = 10) +
       theme(axis.text = element_text(colour = "black"),
             panel.grid = element_blank(), 
-            legend.position = c(0.15, 0.65), 
+            legend.position = 'none', 
             legend.title.align = 0.5,
             legend.background = element_blank(), 
             axis.title.x = element_markdown(family = "sans")) + 
@@ -892,10 +891,9 @@ iso_biplot_1 <- ggplot() +
              shape = 21, colour = "black", 
              stroke = 0.8,
              size = 2, alpha = 0.70) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "species") +
-  scale_color_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "species") +
+  scale_color_brewer(palette = "Set1", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D15N, y = D13C, fill=species, col=species), method="lm", alpha=0.5) +
   #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
   #scale_y_continuous(breaks = seq(5, 17, 1)) +
@@ -914,10 +912,9 @@ iso_biplot_2 <- ggplot() +
              shape = 21, colour = "black", 
              stroke = 0.8,
              size = 2, alpha = 0.70) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "species") +
-  scale_color_viridis_d(begin = 0.25, end = 0.75,
-                        option = "D", name = "species") +
+  scale_color_brewer(palette = "Set1", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D15N, y = D34S, fill=species, col=species), method="lm", alpha=0.5) +
   #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
   #scale_y_continuous(breaks = seq(5, 17, 1)) +
@@ -936,10 +933,9 @@ iso_biplot_3 <- ggplot() +
              shape = 21, colour = "black", 
              stroke = 0.8,
              size = 2, alpha = 0.70) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "species") +
-  scale_color_viridis_d(begin = 0.25, end = 0.75,
-                        option = "D", name = "species") +
+  scale_color_brewer(palette = "Set1", name = "Species") +
+  scale_fill_brewer(palette = "Set1", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   geom_smooth(data = data_per_niche_rover_NA_out, aes(x = D13C, y = D34S, fill=species, col=species), method="lm", alpha=0.5) +
   #scale_x_continuous(breaks = rev(seq(-20, -39, -1))) +
   #scale_y_continuous(breaks = seq(5, 17, 1)) +
@@ -955,12 +951,12 @@ iso_biplot_3 <- ggplot() +
 
 plot <- d15n_density + ellipse_plots_1 + ellipse_plots_2  + iso_biplot_1 + d13c_density + ellipse_plots_3 + iso_biplot_2 + iso_biplot_3 +  d34s_density +
   plot_annotation(tag_levels = "a", 
-                  tag_suffix = ")")
+                  tag_suffix = ")") 
 
 
 print(plot)
 ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/Figure_NicheRover_ggplot.png", plot, 
-       device = png(width = 600, height = 450))
+       device = png(width = 800, height = 600))
 #####
 
 # ---- Estimate niche similarities with nicheROVER ----- 
