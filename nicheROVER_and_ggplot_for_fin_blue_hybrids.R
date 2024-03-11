@@ -17,25 +17,17 @@ library(RColorBrewer)
 library(patchwork)
 library(dplyr)
 library(SuessR)
-library(dplyr)
 library(ellipse)
-library(ggplot2)
 library(ggtext)
 library(here)
 library(nicheROVER) 
 library(purrr)
-library(patchwork)
-library(readr)
 library(stringr)
 library(tidyr)
-library(lubridate)
 library(plyr)
-library(dplyr)
 library(lme4)
 library(climwin)
-library(readxl)
 library(readr)
-library(ggplot2)
 library(mgcv)
 library(lmerTest)
 library(car)
@@ -43,11 +35,8 @@ library(nortest)
 library(effects)
 library(nlme)
 library(lvmisc)
-library(egg)
-library(RColorBrewer)
-library(ggtext)
 library(ggeffects)
-library(patchwork)
+
 
 
 # 2. Import data
@@ -134,10 +123,16 @@ for (i in 1:length(unique(selected_rows$Whale))) {
 }
 combined_df_fin_blue_hybrids
 
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_line()
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_line()
-ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_line() #notar l'increment de so
+Nitrogen <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{15}, "N (\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
+Carboni <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{13}, "C(\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
+Sofre <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{34}, "S (\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
 
+plot_fin <- Nitrogen/Carboni/Sofre  + 
+  plot_layout(ncol = 1) +
+  plot_annotation(tag_levels = "a", 
+                  tag_suffix = ")")
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Time_series_N_C_S_fin_and_hybrids.png", plot_fin, 
+       device = png(width = 450, height = 800))
 
 # 3. Suess and Laws effect correction
 
@@ -339,6 +334,7 @@ rbind(est = colMeans(blue_fin_hybrid.size),
       se = apply(blue_fin_hybrid.size, 2, sd))
 
 # boxplots
+
 clrs <- c("black", "red", "blue", "orange") # colors for each species
 boxplot(blue_fin_hybrid.size, col = clrs, pch = 16, cex = .5,
         ylab = "Niche Size", xlab = "Species")
@@ -447,9 +443,12 @@ posterior_plots <- df_mu_long %>%
                    " | X)"), sep = "")
   )
 
-posterior_plots$D15N  +
+posterior_plots_pl <- posterior_plots$D15N  +
   theme(legend.position = c(0.18, 0.84)) + 
   posterior_plots$D13C + posterior_plots$D34S 
+
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Posterior_plots.png", posterior_plots_pl, 
+       device = png(width = 800, height = 300))
 
 # ---- Prepare sigma dataframes for plotting ----
 
@@ -507,9 +506,11 @@ sigma_plots <- df_sigma_cn %>%
       )
   )
 
-sigma_plots[[1]] +sigma_plots[[2]] +sigma_plots[[3]] +sigma_plots[[4]] +sigma_plots[[5]] +sigma_plots[[6]] +
+sigma_plots_pl <- sigma_plots[[1]] +sigma_plots[[2]] +sigma_plots[[3]] +sigma_plots[[4]] +sigma_plots[[5]] +sigma_plots[[6]] +
   theme(legend.position = c(0.1, 0.82))
 
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Sigma_plots.png", sigma_plots_pl, 
+       device = png(width = 800, height = 600))
 
 # ---- Manipulate sigma dataframes for ellipse loops ----- 
 df_sigma_wide <- df_sigma %>%
@@ -955,7 +956,7 @@ plot <- d15n_density + ellipse_plots_1 + ellipse_plots_2  + iso_biplot_1 + d13c_
 
 
 print(plot)
-ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/Figure_NicheRover_ggplot.png", plot, 
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Niche_rover_plots.png", plot, 
        device = png(width = 800, height = 600))
 #####
 
@@ -1009,15 +1010,13 @@ over_sum <- over_stat_df %>%
 #Species A is along the rows and Species B is along columns. 
 #The plots represent the posterior probability that an individual from the species indicated by the row will be found within the niche of the species indicated by the column header
 
-ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
+Niche_overlap <- ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
   geom_density(aes(fill = species_a)) + 
   geom_vline(data = over_sum, aes(xintercept = mean_mc_nr), 
              colour = "black", linewidth = 1) +
   geom_vline(data = over_sum, aes(xintercept = mc_nr_qual), 
              colour = "black", linewidth = 0.5, linetype = 2) +
-  scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                       option = "D", name = "Species", 
-                       alpha = 0.35) + 
+  scale_fill_brewer(palette = "Set1", name = "Species") +
   ggh4x::facet_grid2(species_a ~ species_b, 
                      independent = "y",
                      scales = "free_y") + 
@@ -1032,6 +1031,9 @@ ggplot(data = over_stat_df, aes(x = mc_nr_perc)) +
                  "Niche Region Size: 95%"), 
        y = "p(Percent Overlap | X)")
 
+
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Niche_overlap.png", Niche_overlap, 
+       device = png(width = 800, height = 600))
 
 # ---- Estimate niche size ----- 
 niche_size <- sapply(fish_par, function(spec) {
@@ -1070,10 +1072,11 @@ niche_size_mean <- niche_size_df %>%
 
 # ---- Plot niche sizes as violin plots ------ 
 
-ggplot(data = niche_size_df) + 
+Niche_size <- ggplot(data = niche_size_df) + 
   geom_violin(
-    aes(x = species, y = niche_size),
+    aes(x = species, y = niche_size, fill=species),
     width = 0.2) + 
+  scale_fill_brewer(palette = "Set1", name = "Species") +
   geom_point(data = niche_size_mean, aes(x = species, y = mean_niche)) +
   geom_errorbar(data = niche_size_mean, aes(x = species, 
                                             ymin = mean_niche  - sem_niche, 
@@ -1081,7 +1084,10 @@ ggplot(data = niche_size_df) +
                 width = 0.05) + 
   theme_bw(base_size = 15) + 
   theme(panel.grid = element_blank(), 
-        axis.text = element_text(colour = "black")) + 
+        axis.text = element_text(colour = "black"),
+        legend.position = c(0.9, 0.1), aspect.ratio = 4/4) + 
   labs(x = "", 
        y = paste("Niche Size (\u2030)"))
 
+ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Niche_size.png", Niche_size, 
+       device = png(width = 800, height = 600))
