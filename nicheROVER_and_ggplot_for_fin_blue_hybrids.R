@@ -1,20 +1,7 @@
-# ---- Bring in Packages ---- 
-{
-  library(dplyr)
-  library(ellipse)
-  library(ggplot2)
-  library(ggtext)
-  library(here)
-  library(nicheROVER) 
-  library(purrr)
-  library(patchwork)
-  library(readr)
-  library(stringr)
-  library(tidyr)
-}
+
 
 #--------------------------------------------------------------------------------
-#Suess correction of time-calibrated stable isotope data
+# FIN-BLUE WHALE HYBRIDS ISOTOPIC NICHES
 #--------------------------------------------------------------------------------
 
 # 1. Load libraries
@@ -30,6 +17,38 @@ library(RColorBrewer)
 library(patchwork)
 library(dplyr)
 library(SuessR)
+library(dplyr)
+library(ellipse)
+library(ggplot2)
+library(ggtext)
+library(here)
+library(nicheROVER) 
+library(purrr)
+library(patchwork)
+library(readr)
+library(stringr)
+library(tidyr)
+library(lubridate)
+library(plyr)
+library(dplyr)
+library(lme4)
+library(climwin)
+library(readxl)
+library(readr)
+library(ggplot2)
+library(mgcv)
+library(lmerTest)
+library(car)
+library(nortest)
+library(effects)
+library(nlme)
+library(lvmisc)
+library(egg)
+library(RColorBrewer)
+library(ggtext)
+library(ggeffects)
+library(patchwork)
+
 
 # 2. Import data
 merge <- read_excel("~/Desktop/0_point_alignments_29_juny_total_-4_amb_sofre.xlsx")
@@ -154,44 +173,77 @@ names(df) <- c("id","Cm","d15n","dC", "dS", "Whale_1","Whale","Sex","Status","Ta
 
 
 # 2. Statistics
-df_hybrids <- filter(df, species == "hybrid")
-df_fin <- filter(df, species == "fin")
 
-#Normality
-shapiro.test(df_hybrids$d15n)
-shapiro.test(df_hybrids$d13c)
-shapiro.test(df_hybrids$dS)
+library(lmerTest)
+library(lme4)
 
-library("car")
-dev.off()
-qqPlot(df_hybrids$d13c) #As all the points fall approximately along this reference line, we can assume normality.
+#Nitrogen
+lmer_dN <- lmer(d15n ~ 1 + species + (1|Whale), data=df)
+summary(lmer_dN)
+plot(allEffects(lmer_dN))
 
-# Homoscedasticity 
-bartlett.test(d15n ~ species, df) #different
-bartlett.test(d13c ~ species, df)
-bartlett.test(dS ~ species, df)
+# Model validation
+plot_model(lmer_dN) # diagnostics
+cv_m1 <- loo_cv(lmer_dN, df, "Whale", keep = "used") # cross-validation
+accuracy(lmer_dN) # accuracy
+compare_accuracy(lmer_dN, cv_m1) # compare accuracy
+confint(lmer_dN) # confint
+summary(lmer_dN)
 
-require(ggstatsplot)
-library(ggsignif)
-df$species <- as.factor(df$species)
-df$d15n <- as.double(df$d15n)
-ggstatsplot::ggbetweenstats(data= df, x= species, y= d13c)
-ggstatsplot::ggbetweenstats(data= df, x= species, y= d15n)
-ggstatsplot::ggbetweenstats(data= df, x= species, y= dS)
-wilcox.test(df_hybrids$d15n,df_fin$d15n)
+# Model validation with boostraping
+qqPlot(resid(lmer_dN)) # normality of the residuals
+qqPlot(c(ranef(lmer_dN)$Whale$`(Intercept)`)) # normality of the random effects
+plot(lmer_dN) # variance homogeneity
 
-result <- t.test(df_hybrids$d15n,df_fin$d15n, var.equal = FALSE)
-result
+f = function(m) {res= fixef(m)[2]; names(res) = names(fixef(m)[2]); res}
+boost <- lme4::bootMer(lmer_dC, f, nsim=200, type="semiparametric", use.u=TRUE)
+plot(boost, index= 1)
 
-result <- t.test(df_hybrids$d13c,df_fin$d13c, var.equal = TRUE)
-result
+# Carbon
+lmer_dC <- lmer(d13c ~ 1 + species + (1|Whale), data=df)
+summary(lmer_dC)
+plot(allEffects(lmer_dC))
 
-result <- t.test(df_hybrids$dS,df_fin$dS, var.equal = TRUE)
-result
+# Model validation
+plot_model(lmer_dC) # diagnostics
+cv_m1 <- loo_cv(lmer_dC, df, "Whale", keep = "used") # cross-validation
+accuracy(lmer_dC) # accuracy
+compare_accuracy(lmer_dC, cv_m1) # compare accuracy
+confint(lmer_dC) # confint
+summary(lmer_dC)
 
-# Calculate Hedges' g effect size
-library(effsize)
-hedges_g <- effsize::cohen.d(d = df$dS, f= df$species, method = "hedges")
+# Model validation with boostraping
+qqPlot(resid(lmer_dC)) # normality of the residuals
+qqPlot(c(ranef(lmer_dC)$Whale$`(Intercept)`)) # normality of the random effects
+plot(lmer_dC) # variance homogeneity
+
+f = function(m) {res= fixef(m)[2]; names(res) = names(fixef(m)[2]); res}
+boost <- lme4::bootMer(lmer_dC, f, nsim=200, type="semiparametric", use.u=TRUE)
+plot(boost, index= 1)
+
+
+#Sulfur
+lmer_dS <- lmer(dS ~ 1 + species + (1|Whale), data=df)
+summary(lmer_dS)
+plot(allEffects(lmer_dS))
+
+# Model validation
+plot_model(lmer_dS) # diagnostics
+cv_m1 <- loo_cv(lmer_dS, df, "Whale", keep = "used") # cross-validation
+accuracy(lmer_dS) # accuracy
+compare_accuracy(lmer_dS, cv_m1) # compare accuracy
+confint(lmer_dS) # confint
+summary(lmer_dS)
+
+# Model validation with boostraping
+qqPlot(resid(lmer_dS)) # normality of the residuals
+qqPlot(c(ranef(lmer_dS)$Whale$`(Intercept)`)) # normality of the random effects
+plot(lmer_dS) # variance homogeneity
+
+f = function(m) {res= fixef(m)[2]; names(res) = names(fixef(m)[2]); res}
+boost <- lme4::bootMer(lmer_dS, f, nsim=200, type="semiparametric", use.u=TRUE)
+plot(boost, index= 1)
+
 
 ###################################################################################
 #fer-ho amb nicheROVER
@@ -370,13 +422,15 @@ df_sigma_cn <- df_sigma %>%
   dplyr::filter(id != isotopes)
 
 # ---- Plot posterior samples for mu estimates from nicheROver ----- 
+
+#change this color for a palettes 
 posterior_plots <- df_mu_long %>%
   split(.$isotope) %>%
   imap(
     ~ ggplot(data = ., aes(x = mu_est)) +
       geom_density(aes(fill = species), alpha = 0.5) +
-      scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                           option = "D", name = "Species") +
+      scale_fill_brewer(palette = "RdYlBu", name = "Species") +
+      #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
       theme_bw() +
       theme(panel.grid = element_blank(),
             axis.title.x =  element_markdown(),
@@ -429,8 +483,8 @@ sigma_plots <- df_sigma_cn %>%
   imap(
     ~ ggplot(data = ., aes(x = post_sample)) +
       geom_density(aes(fill = species), alpha = 0.5) +
-      scale_fill_viridis_d(begin = 0.25, end = 0.75,
-                           option = "D", name = "Species") +
+      scale_fill_brewer(palette = "RdYlBu", name = "Species") +
+      #scale_fill_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
       theme_bw() +
       theme(panel.grid = element_blank(),
             axis.title.x =  element_markdown(),
@@ -548,9 +602,8 @@ ellipse_plots_1 <- ggplot() +
                fill = NA,
                linewidth = 0.5) + 
   
-  scale_colour_viridis_d(begin = 0.25, end = 0.75, 
-                         option = "D", name = "species",
-  ) + 
+  scale_color_brewer(palette = "Set1", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
   #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
@@ -559,8 +612,8 @@ ellipse_plots_1 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(x = expression(paste(delta ^ 13, "C")), 
-       y = expression(paste(delta ^ 15, "N")))
+  labs(x = expression(paste(delta^{13}, "C (\u2030)")), 
+       y = expression(paste(delta^{15}, "N (\u2030)")))
 
 
 all_ellipses_NS <- list()
@@ -640,9 +693,8 @@ ellipse_plots_2 <- ggplot() +
                fill = NA,
                linewidth = 0.5) + 
   
-  scale_colour_viridis_d(begin = 0.25, end = 0.75, 
-                         option = "D", name = "species",
-  ) + 
+  scale_color_brewer(palette = "RdYlBu", name = "Species") +
+  #scale_color_viridis_d(begin = 0.25, end = 0.75, option = "D", name = "Species") +
   #scale_x_continuous(breaks = rev(seq(-20, -40, -2))) +
   #scale_y_continuous(breaks = seq(6, 16, 2)) +
   theme_bw(base_size = 10) +
@@ -651,8 +703,8 @@ ellipse_plots_2 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(x = expression(paste(delta ^ 34, "S")), 
-       y = expression(paste(delta ^ 15, "N")))
+  labs(x = expression(paste(delta^{34}, "S (\u2030)")), 
+       y = expression(paste(delta^{15}, "N (\u2030)")))
 
 all_ellipses_CS <- list()
 
@@ -742,8 +794,8 @@ ellipse_plots_3 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(x = expression(paste(delta ^ 34, "S")), 
-       y = expression(paste(delta ^ 13, "C")))
+  labs(x = expression(paste(delta^{34}, "S (\u2030)")), 
+       y = expression(paste(delta^{13}, "C (\u2030)")))
 
 
 iso_long <- data_per_niche_rover_NA_out %>% pivot_longer(cols = -species,
@@ -762,12 +814,52 @@ iso_long <- data_per_niche_rover_NA_out %>% pivot_longer(cols = -species,
     )
   )
 
+iso_density1 <- iso_long %>% 
+  group_split(isotope) 
+iso_density1 <- ggplot(data = iso_density1[[1]]) + 
+  geom_density(aes(x = value, 
+                   fill = species), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  scale_fill_viridis_d(begin = 0.25, end = 0.75,
+                       option = "D", name = "Species") +
+  theme_bw(base_size = 10) +
+  theme(axis.text = element_text(colour = "black"),
+        panel.grid = element_blank(), 
+        legend.position = 'none', 
+        legend.title.align = 0.5,
+        legend.background = element_blank(), 
+        axis.title.x = element_markdown(family = "sans")) + 
+  labs(x =  paste("\U03B4",
+                  "<sup>", unique(iso_density1[[1]]$neutron), "</sup>",unique(iso_density1[[1]]$element), " (\u2030)",
+                  sep = ""), 
+       y = "Density")
+
+iso_density2 <- iso_long %>% 
+  group_split(isotope) 
+iso_density2 <- ggplot(data = iso_density2[[2]]) + 
+  geom_density(aes(x = value, 
+                   fill = species), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  scale_fill_viridis_d(begin = 0.25, end = 0.75,
+                       option = "D", name = "Species") +
+  theme_bw(base_size = 10) +
+  theme(axis.text = element_text(colour = "black"),
+        panel.grid = element_blank(), 
+        legend.position = 'none', 
+        legend.title.align = 0.5,
+        legend.background = element_blank(), 
+        axis.title.x = element_markdown(family = "sans")) + 
+  labs(x =  paste("\U03B4",
+                  "<sup>", unique(iso_density2[[2]]$neutron), "</sup>",unique(iso_density2[[2]]$element), " (\u2030)",
+                  sep = ""), 
+       y = "Density")
 
 
-iso_density <- iso_long %>% 
-  group_split(isotope) %>% 
-  imap(
-    ~ ggplot(data = .) + 
+iso_density3 <- iso_long %>% 
+  group_split(isotope) 
+iso_density3 <- ggplot(data = iso_density3[[3]]) + 
       geom_density(aes(x = value, 
                        fill = species), 
                    alpha = 0.35, 
@@ -782,16 +874,16 @@ iso_density <- iso_long %>%
             legend.background = element_blank(), 
             axis.title.x = element_markdown(family = "sans")) + 
       labs(x =  paste("\U03B4",
-                      "<sup>", unique(.$neutron), "</sup>",unique(.$element), 
+                      "<sup>", unique(iso_density3[[3]]$neutron), "</sup>",unique(iso_density3[[3]]$element), " (\u2030)",
                       sep = ""), 
            y = "Density")
-  )
 
-d34s_density <- iso_density[[3]] 
 
-d15n_density <- iso_density[[2]] 
+d34s_density <- iso_density3
 
-d13c_density <- iso_density[[1]]
+d15n_density <- iso_density2 
+
+d13c_density <- iso_density1
 
 
 iso_biplot_1 <- ggplot() + 
@@ -813,8 +905,8 @@ iso_biplot_1 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(y = expression(paste(delta ^ 13, "C")), 
-       x = expression(paste(delta ^ 15, "N")))
+  labs(y = expression(paste(delta^{13}, "C (\u2030)")), 
+       x = expression(paste(delta^{15}, "N (\u2030)")))
 
 iso_biplot_2 <- ggplot() + 
   geom_point(data = data_per_niche_rover_NA_out, aes(x = D15N, y = D34S,
@@ -835,8 +927,8 @@ iso_biplot_2 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(y = expression(paste(delta ^ 34, "S")), 
-       x = expression(paste(delta ^ 15, "N")))
+  labs(y = expression(paste(delta^{34}, "S (\u2030)")), 
+       x = expression(paste(delta^{15}, "N (\u2030)")))
 
 iso_biplot_3 <- ggplot() + 
   geom_point(data = data_per_niche_rover_NA_out, aes(x = D13C, y = D34S,
@@ -857,8 +949,8 @@ iso_biplot_3 <- ggplot() +
         legend.position = "none", 
         legend.title.align = 0.5,
         legend.background = element_blank()) + 
-  labs(y = expression(paste(delta ^ 34, "S")), 
-       x = expression(paste(delta ^ 13, "C")))
+  labs(y = expression(paste(delta^{34}, "S (\u2030)")), 
+       x = expression(paste(delta^{13}, "C (\u2030)")))
 
 
 plot <- d15n_density + ellipse_plots_1 + ellipse_plots_2  + iso_biplot_1 + d13c_density + ellipse_plots_3 + iso_biplot_2 + iso_biplot_3 +  d34s_density +
@@ -879,7 +971,7 @@ over_stat <- overlap(fish_par, nreps = nsample, nprob = 1000,
 # ---- Extract niche similarities and convert into a dataframe ---- 
 over_stat_df <- over_stat %>% 
   as_tibble(rownames = "species_a") %>% 
-  mutate(
+  dplyr::mutate(
     id = 1:nrow(.), 
     species_a = factor(species_a, 
                        level = c("fin", "hybrid"))
@@ -889,9 +981,9 @@ over_stat_df <- over_stat %>%
                values_to = "mc_nr")  %>% 
   separate(species_b, into = c("species_c", "sample_number"), 
            sep = "\\.") %>% 
-  select(-id) %>% 
-  rename(species_b = species_c) %>% 
-  mutate(
+  dplyr::select(-id) %>% 
+  dplyr::rename(species_b = species_c) %>% 
+  dplyr::mutate(
     species_b =  factor(species_b, 
                         level = c("fin", "hybrid")
     ), 
@@ -901,17 +993,17 @@ over_stat_df <- over_stat %>%
 
 
 over_sum <- over_stat_df %>% 
-  group_by(species_a, species_b) %>% 
-  summarise(
+  dplyr::group_by(species_a, species_b) %>% 
+  dplyr::summarise(
     mean_mc_nr = round(mean(mc_nr_perc), digits = 2),
     qual_2.5 = round(quantile(mc_nr_perc, probs = 0.025, na.rm = TRUE), digits = 2), 
     qual_97.5 = round(quantile(mc_nr_perc, probs = 0.975, na.rm = TRUE), digits = 2)
   ) %>% 
-  ungroup() %>% 
+  dplyr::ungroup() %>% 
   pivot_longer(cols = -c(species_a, species_b, mean_mc_nr), 
                names_to = "percentage", 
                values_to = "mc_nr_qual") %>% 
-  mutate(
+  dplyr::mutate(
     percentage = as.numeric(str_remove(percentage, "qual_"))
   ) 
 
@@ -971,16 +1063,17 @@ niche_size_df <- niche_size %>%
 
 # ---- Extract niche size mean, sd, and sem ----- 
 niche_size_mean <- niche_size_df %>% 
-  group_by(species) %>% 
-  summarise(
+  dplyr::group_by(species) %>% 
+  dplyr::summarise(
     mean_niche = round(mean(niche_size), digits = 2), 
     sd_niche = round(sd(niche_size), digits = 2), 
     sem_niche = round(sd(niche_size) / sqrt(n()), digits = 2)
   ) %>% 
-  ungroup()
+  dplyr::ungroup()
 
 
 # ---- Plot niche sizes as violin plots ------ 
+
 ggplot(data = niche_size_df) + 
   geom_violin(
     aes(x = species, y = niche_size),
@@ -994,5 +1087,5 @@ ggplot(data = niche_size_df) +
   theme(panel.grid = element_blank(), 
         axis.text = element_text(colour = "black")) + 
   labs(x = "", 
-       y = "Niche Size") 
+       y = paste("Niche Size (\u2030)"))
 
