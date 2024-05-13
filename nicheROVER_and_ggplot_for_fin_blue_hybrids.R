@@ -40,12 +40,30 @@ library(ggeffects)
 
 
 # 2. Import data
-merge <- read_excel("~/Desktop/0_point_alignments_29_juny_total_-4_amb_sofre.xlsx")
+merge <- read_excel("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/0_point_alignments_29_juny_total_-4_amb_sofre_blue.xlsx")
+unique(merge$Species) #fin hybrid blue
+
+which(is.na(merge$Data_capt))
+
+merge[c(1611:1671),]$Data_capt <- as.Date(c(rep("2010/08/23", 61))) 
+merge[c(1672:1701),]$Data_capt <- as.Date(c(rep("1987/08/23", 30))) #segona data inventada
+
+# per no tenir valors NA fem aproxx en al carboni
+which(is.na(merge$dC))
+
+merge$dC <- na.approx(merge$dC )
+
+
+
+
+
+
+#cabviar els dies en que no tenim la data per el dies on si que la tenim
 
 #merge <-merge[complete.cases(merge$dC), ] # remove the rows with no d13C values in order to be able to correct for the Suess effect
 #merge <-merge[complete.cases(merge$dN), ]
 
-merge1 <- merge %>% 
+#merge1 <- merge %>% 
   dplyr::mutate(Species = ifelse(Whale %in% c("F13129", "F18022", "F18098"), "hybrid", "fin")) 
 
 #merge2 <- dplyr::filter(merge1, Species == "fin") # remove blue-fin hybrids
@@ -55,12 +73,15 @@ length(unique(merge1$Whale)) # we have 30 fin whale individuals (being non-hybri
 #merge3 <- dplyr::filter(merge2, Whale != "F18025") # select all the whales that are not F18025 (non well-sampled)
 
 # Create a logical index for rows with non-missing values in all three columns
-index <- !is.na(merge1$dC) & !is.na(merge1$dC) & !is.na(merge1$dS)
+#index <- !is.na(merge1$dC) & !is.na(merge1$dC) & !is.na(merge1$dS)
 
 # Select rows with non-missing values in all three columns
-selected_rows <- merge1[index, ]
+#selected_rows <- merge1[index, ]
+
+selected_rows <- dplyr::filter(merge, Whale %in% c("F18098", "F18022", "F13065", "F13129" ,"F13066", "F13068", "F13073", "F13076", "BMUS_1990", "BMUS_2010"))
 
 # 2. Time-estimation
+
 
 unique(selected_rows$Whale) # (n=7; "F18098" "F18022" "F13065" "F13066" "F13068" "F13073" "F13076")
 
@@ -123,7 +144,9 @@ for (i in 1:length(unique(selected_rows$Whale))) {
 }
 combined_df_fin_blue_hybrids
 
-Nitrogen <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{15}, "N (\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
+unique(combined_df_fin_blue_hybrids$Species)
+
+Nitrogen <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dN, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{15}, "N (\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4) 
 Carboni <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dC, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{13}, "C(\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
 Sofre <- ggplot(combined_df_fin_blue_hybrids, aes(year_rev, dS, color=Whale)) + geom_line() + xlab("Year") + ylab(expression(paste(delta^{34}, "S (\u2030)"))) + theme_bw() + theme(aspect.ratio = 3/4)
 
@@ -162,18 +185,39 @@ library(openxlsx) # Save
 # ---- Bring in example data; will need to replace with your own ----
 
 df <- fw.data_d13cor
+names(df)
 names(df) <- c("id","Cm","d15n","dC", "dS", "Whale_1","Whale","Sex","Status","Talla_fetus_(cm)","Sexe_fetus","Length","Talla_(peus)",          
 "Data_capt","Lat","Long","Edat","Year","species","days","rev_days","sample_date","year.x","year_rev","Year_from_sample_date","Year_month","Month_from_sample_date","region",                
 "year.y","d13c.uncor","Laws.cor","Suess.cor","net.cor","d13c")
+
+
+
 
 
 # 2. Statistics
 
 library(lmerTest)
 library(lme4)
+library(effects)
 
 #Nitrogen
-lmer_dN <- lmer(d15n ~ 1 + species + (1|Whale), data=df)
+#merge %>% group_by(Species)  %>% dplyr::summarise(sp_mean = mean(dN, na.rm=T), sd= sd(dN, na.rm=T), max= max(dN, na.rm=T), min= min(dN, na.rm=T))
+#ggplot(merge, aes(Species, dN)) + geom_boxplot()
+
+#df <- merge %>% dplyr::filter(Whale %in% c("F18098", "F18022", "F13065", "F13066", "F13068", "F13073", "F13076","F13129", "BMUS_2010", "BMUS_1990"))
+unique(df$Whale)
+data_without_N_Nas <- df %>% drop_na(d15n)
+lmer_dN <- lmer(d15n ~ 1 + species + (1|Whale), data=data_without_N_Nas,REML = TRUE,control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_dN)
+plot(allEffects(lmer_dN))
+
+data_without_C_Nas <- df %>% drop_na(d13c)
+lmer_dN <- lmer(d13c ~ 1 + species + (1|Whale), data=data_without_C_Nas,REML = TRUE,control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_dN)
+plot(allEffects(lmer_dN))
+
+data_without_S_Nas <- df %>% drop_na(dS)
+lmer_dN <- lmer(dS ~ 1 + species + (1|Whale), data=data_without_S_Nas,REML = TRUE,control = lmerControl(optimizer ="Nelder_Mead"))
 summary(lmer_dN)
 plot(allEffects(lmer_dN))
 
@@ -195,7 +239,7 @@ boost <- lme4::bootMer(lmer_dC, f, nsim=200, type="semiparametric", use.u=TRUE)
 plot(boost, index= 1)
 
 # Carbon
-lmer_dC <- lmer(d13c ~ 1 + species + (1|Whale), data=df)
+lmer_dC <- lmer(d13C ~ 1 + species + (1|Whale), data=df)
 summary(lmer_dC)
 plot(allEffects(lmer_dC))
 
@@ -245,7 +289,7 @@ plot(boost, index= 1)
 ###################################################################################
 
 library(nicheROVER)
-
+unique(df$species)
 data_per_niche_rover <- df[,c(3,5,34,19)]
 aggregate(data_per_niche_rover[c(1,2,3)], data_per_niche_rover[4], mean, na.rm = TRUE) # isotope means calculated for each speci
 
@@ -263,7 +307,7 @@ system.time({
 })
 
 # various parameter plots
-clrs <- c("red", "blue", "orange") # colors for each species
+clrs <- c("red", "blue", "green") # colors for each species
 
 # mu1 (del15N), mu2 (del13C), and Sigma12
 par(mar = c(4, 4, .5, .1)+.1, mfrow = c(1,3))
@@ -282,7 +326,7 @@ niche.par.plot(blue_fin_hybrid.par, col = clrs, plot.mu = TRUE, plot.Sigma = TRU
 legend("topright", legend = names(blue_fin_hybrid.par), fill = clrs)
 
 # 2-d projections of 10 niche regions
-clrs <- c("red", "blue", "orange") # colors for each species
+clrs <- c("red", "blue", "green") # colors for each species
 nsamples <- 10
 blue_fin_hybrid.par <- tapply(1:nrow(data_per_niche_rover_NA_out), data_per_niche_rover_NA_out$species,
                    function(ii) niw.post(nsamples = nsamples, X = data_per_niche_rover_NA_out[ii,2:4]))
@@ -314,7 +358,7 @@ round(over.cred[,,,1]) # display alpha = .95 niche region
 
 # Overlap plot.Before you run this, make sure that you have chosen your 
 #alpha level.
-clrs <- c("red", "blue", "orange") # colors for each species
+clrs <- c("red", "blue", "green") # colors for each species
 over.stat <- overlap(blue_fin_hybrid.par, nreps = nsamples, nprob = 1e3, alpha = .95)
 overlap.plot(over.stat, col = clrs, mean.cred.col = "turquoise", equal.axis = TRUE,
              xlab = "Overlap Probability (%) -- Niche Region Size: 95%")
@@ -335,7 +379,7 @@ rbind(est = colMeans(blue_fin_hybrid.size),
 
 # boxplots
 
-clrs <- c("black", "red", "blue", "orange") # colors for each species
+clrs <- c("black", "red", "blue", "green") # colors for each species
 boxplot(blue_fin_hybrid.size, col = clrs, pch = 16, cex = .5,
         ylab = "Niche Size", xlab = "Species")
 
@@ -343,8 +387,1061 @@ boxplot(blue_fin_hybrid.size, col = clrs, pch = 16, cex = .5,
 ###################################################################################
 #fer-ho amb ggplot
 ###################################################################################
+data_per_niche_rover <- df[,c(3,5,34,19,7)]
+
+data_per_niche_rover_NA_out <- data.frame(species= data_per_niche_rover$species,
+                                          D15N= data_per_niche_rover$d15n, 
+                                          D13C= data_per_niche_rover$d13c
+                                          #D34S = data_per_niche_rover$dS
+                                          
+)
 
 
+library(SIBER, quietly = TRUE,
+        verbose = FALSE,
+        logical.return = FALSE)
+
+library(viridis)
+palette(viridis(4))
+
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+max(per_C_N$D15N)
+min(per_C_N$D15N)
+
+max(per_C_N$D13C)
+min(per_C_N$D13C)
+
+#N amb C
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D13C, 
+  iso2= per_C_N$D15N,
+  group= per_C_N$species,
+  community = rep("a",467))
+
+
+####
+#make ellipses overlap 
+library(SIBER)
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+ellipse1 <- "a.hybrid" 
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse2 <- "a.blue"
+
+ellipse3 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse2, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+#Overlap Nitrogen Carboni hybrid-blue = 6.237677 (0.6841612 proportion)
+##Overlap Nitrogen Carboni hybrid-fin = 4.845884 (0.4489594 proportion)
+##Overlap Nitrogen Carboni blue-fin = 4.834358 (0.4143555 proportion)
+
+
+####
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                        community = rep("a",467),
+                                        d13C = per_C_N$D13C, 
+                                        d15N = per_C_N$D15N,
+                                        .keep = "unused") 
+dev.off()
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = d13C, 
+                         y = d15N)) + 
+  geom_point(aes(color = group), 
+             #shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             shape=1,
+             size = 2, 
+             alpha=0.75) +
+  ylab(expression(paste(delta^{15}, "N (\u2030)"))) +
+  xlab(expression(paste(delta^{13}, "C (\u2030)"))) + 
+  #theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("blue","darkgrey","red")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1) + xlim(c(-21.5,-17.5)) + ylim(c(6,13.5))
+
+# And print our plot to screen
+print(first.plot)
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+first.plot.dens_b <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D15N, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green")) + xlim(6,13.5) + xlab(expression(paste(delta^{15}, "N (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = c(0.2,0.9) )
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+first.plot.dens2_b <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D13C, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green")) + xlim(-21.5,-17.5) + xlab(expression(paste(delta^{13}, "C (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = "none" )
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot1 <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Blue", "Fin", "Hybrid"), values = c("blue","red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = c(0.2,0.2))
+
+print(ellipse.plot1)
+
+#C amb S
+data_per_niche_rover_NA_out <- data.frame(species= data_per_niche_rover$species,
+                                          #D15N= data_per_niche_rover$d15n, 
+                                          D13C= data_per_niche_rover$d13c,
+                                          D34S = data_per_niche_rover$dS
+                                          
+)
+
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+
+max(per_C_N$D34S)
+min(per_C_N$D34S)
+
+max(per_C_N$D13C)
+min(per_C_N$D13C)
+
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D13C, 
+  iso2= per_C_N$D34S,
+  group= per_C_N$species,
+  community = rep("a",232))
+
+####
+#make ellipses overlap 
+library(SIBER)
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+ellipse1 <- "a.hybrid" 
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse2 <- "a.blue"
+
+ellipse3 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse3, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+##Overlap Carboni Sofre hybrid-fin = 1.908452 (0.3445563 proportion)
+
+
+
+####
+
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                community = rep("a",232),
+                                d13C = per_C_N$D13C, 
+                                d34S = per_C_N$D34S,
+                                .keep = "unused") 
+
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = d34S, 
+                         y = d13C)) + 
+  geom_point(aes(color = group), size = 2, 
+             #shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             shape=1,
+             alpha=0.75) +
+  xlab(expression(paste(delta^{34}, "S (\u2030)"))) +
+  ylab(expression(paste(delta^{13}, "C (\u2030)"))) + 
+  theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("red","green")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1) + ylim(c(-21.5,-17.5)) + xlim(c(15,20))
+
+# And print our plot to screen
+print(first.plot)
+
+first.plot.dens3_b <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D34S, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Fin", "Hybrid"), values = c("red","green")) + xlim(15,20) + xlab(expression(paste(delta^{34}, "S (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = "none")
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot2 <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Fin", "Hybrid"), values = c("red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = "none") 
+
+print(ellipse.plot2)
+
+
+#N amb S
+data_per_niche_rover_NA_out <- data.frame(species= data_per_niche_rover$species,
+                                          D15N= data_per_niche_rover$d15n, 
+                                          #D13C= data_per_niche_rover$d13c,
+                                          D34S = data_per_niche_rover$dS
+                                          
+)
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D15N, 
+  iso2= per_C_N$D34S,
+  group= per_C_N$species,
+  community = rep("a",231))
+
+####
+#make ellipses overlap 
+library(SIBER)
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+ellipse1 <- "a.hybrid" 
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse2 <- "a.blue"
+
+ellipse3 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse3, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+##Overlap Nitrogen Sofre hybrid-fin = 2.673845 (0.209836 proportion)
+
+
+
+####
+
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                community = rep("a",231),
+                                D15N = per_C_N$D15N, 
+                                d34S = per_C_N$D34S,
+                                .keep = "unused") 
+
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = d34S, 
+                         y = D15N)) + 
+  geom_point(aes(color = group), size = 2, 
+             #shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             shape=1,
+             alpha=0.75) +
+  ylab(expression(paste(delta^{15}, "N (\u2030)"))) +
+  xlab(expression(paste(delta^{34}, "S (\u2030)"))) + 
+  theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("red","green")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1)  + ylim(c(6,13.5)) + xlim(c(15,20))
+
+# And print our plot to screen
+print(first.plot)
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot3 <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Fin", "Hybrid"), values = c("red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = "none")
+
+print(ellipse.plot3)
+
+
+
+ellipse.plot1 + ellipse.plot2 + ellipse.plot3
+
+#pells
+
+Pells_N_C_S <- read_excel("~/Desktop/Pells_N_C_S.xls", 
+                          sheet = "Pells")
+
+
+
+merge3 <-Pells_N_C_S
+
+merge3$id <-seq.int(nrow(merge3)) # add a sequence number to each row
+
+merge3 <- merge3 %>% add_column(region = "Subpolar North Atlantic") # add the Subpolar North Atlantic region to each row
+
+df1 <- merge3 # rename merge3 to df1
+
+subset <- df1[c("id", "dC","Any","region")] # select the merge3 column names (for RSuess) and name it subset
+
+names(subset) <- c("id", "d13c","year","region") # rename subset columnames
+
+subset$year <- as.numeric(subset$year) # define year as a numeric variable
+
+subset <- as.data.frame(subset) # define subset as a dataframe
+
+df2 <- SuessR(data=subset, correct.to = 2022) # correct the Suess and Laws effect to the year 2022
+
+fw.data_d13cor <- merge(df1,df2,by="id") # merge df1 and df2
+
+#N amb C
+data_per_niche_rover_NA_out <- data.frame(species= fw.data_d13cor$Species,
+                                          D15N= fw.data_d13cor$dN, 
+                                          D13C= fw.data_d13cor$d13c.cor
+                                          #D34S = fw.data_d13cor$dS
+                                          
+)
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D15N, 
+  iso2= per_C_N$D13C,
+  group= per_C_N$species,
+  community = rep("a",43))
+
+####
+#make ellipses overlap 
+library(SIBER)
+data_per_niche_rover_NA_out_SIBER_no_hyb <- dplyr::filter(data_per_niche_rover_NA_out_SIBER, !group == "hybrid")
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER_no_hyb)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse1 <- "a.blue"
+
+ellipse2 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse2, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+##Overlap Nitrogen Carbon hybrid-fin = 2.003857 (0.3695364 proportion)
+
+
+
+####
+
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                community = rep("a",43),
+                                D15N = per_C_N$D15N, 
+                                D13C = per_C_N$D13C,
+                                .keep = "unused") 
+
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = D13C, 
+                         y = D15N)) + 
+  geom_point(aes(color = group), size = 2, 
+             shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             #shape=1,
+             alpha=0.75) +
+  ylab(expression(paste(delta^{15}, "N (\u2030)"))) +
+  xlab(expression(paste(delta^{13}, "C (\u2030)"))) + 
+  theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("blue","red","green")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1)  + xlim(c(-21.5,-17.5)) + ylim(c(6,13.5))
+
+# And print our plot to screen
+print(first.plot)
+
+
+first.plot.dens <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D15N, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green")) + xlim(6,13.5) + xlab(expression(paste(delta^{15}, "N (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = c(0.2,0.9) )
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+first.plot.dens2 <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D13C, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green")) + xlim(-21.5,-17.5) + xlab(expression(paste(delta^{13}, "C (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = "none")
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot1_p <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = c(0.2,0.2))
+
+print(ellipse.plot1_p)
+
+#N amb S
+data_per_niche_rover_NA_out <- data.frame(species= fw.data_d13cor$Species,
+                                          D15N= fw.data_d13cor$dN, 
+                                          #D13C= data_per_niche_rover$d13c,
+                                          D34S = fw.data_d13cor$dS
+                                          
+)
+
+
+
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D15N, 
+  iso2= per_C_N$D34S,
+  group= per_C_N$species,
+  community = rep("a",39))
+
+####
+#make ellipses overlap 
+library(SIBER)
+data_per_niche_rover_NA_out_SIBER_no_hyb <- dplyr::filter(data_per_niche_rover_NA_out_SIBER, !group == "hybrid")
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER_no_hyb)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse1 <- "a.blue"
+
+ellipse2 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse2, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+##Overlap Nitrogen Sofre hybrid-fin = 2.356818 (0.4773415 proportion)
+
+
+
+####
+
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                community = rep("a",39),
+                                D15N = per_C_N$D15N, 
+                                d34S = per_C_N$D34S,
+                                .keep = "unused") 
+
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = d34S, 
+                         y = D15N)) + 
+  geom_point(aes(color = group), size = 2, 
+             shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             #shape=1,
+             alpha=0.75) +
+  ylab(expression(paste(delta^{15}, "N (\u2030)"))) +
+  xlab(expression(paste(delta^{34}, "S (\u2030)"))) + 
+  theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("blue","red","green")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1)  + ylim(c(6,13.5)) + xlim(c(15,20))
+
+first.plot.dens3 <- ggplot(data = demo_data) + 
+  geom_density(aes(x = D34S, 
+                   fill = group), 
+               alpha = 0.35, 
+               linewidth = 0.8) +
+  theme(text = element_text(size=16)) + 
+  scale_fill_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green")) + xlim(17.5,20.5) + xlab(expression(paste(delta^{34}, "S (\u2030)"))) + ylab("Density") + theme_article(base_size = 20) + theme(aspect.ratio = 1/1, legend.position = "none" )
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# And print our plot to screen
+print(first.plot)
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot2_p <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = "none")
+
+print(ellipse.plot2_p)
+
+#C amb S
+data_per_niche_rover_NA_out <- data.frame(species= fw.data_d13cor$Species,
+                                          #D15N= fw.data_d13cor$dN, 
+                                          D13C= fw.data_d13cor$d13c.cor,
+                                          D34S = fw.data_d13cor$dS
+                                          
+)
+per_C_N <- na.omit(data_per_niche_rover_NA_out)
+nrow(per_C_N)
+# create the siber object
+data_per_niche_rover_NA_out_SIBER <- data.frame(
+  iso1= per_C_N$D13C, 
+  iso2= per_C_N$D34S,
+  group= per_C_N$species,
+  community = rep("a",39))
+
+####
+#make ellipses overlap 
+library(SIBER)
+data_per_niche_rover_NA_out_SIBER_no_hyb <- dplyr::filter(data_per_niche_rover_NA_out_SIBER, !group == "hybrid")
+siber.example_N_overlap_b <- createSiberObject(data_per_niche_rover_NA_out_SIBER_no_hyb)
+par(mfrow=c(1,1))
+plotSiberObject(siber.example_N_overlap_b,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = T, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "L",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'permille'),
+                ylab = expression({delta}^15*N~'permille')
+)
+
+# In this example, I will calculate the overlap between ellipses for groups 2
+# and 3 in community 1 (i.e. the green and yellow open circles of data).
+
+# The first ellipse is referenced using a character string representation where 
+# in "x.y", "x" is the community, and "y" is the group within that community.
+# So in this example: community 1, group 2
+
+# Ellipse two is similarly defined: community 1, group3
+ellipse1 <- "a.blue"
+
+ellipse2 <- "a.fin"
+
+# the overlap betweeen the corresponding 95% prediction ellipses is given by:
+ellipse95.overlap <- maxLikOverlap(ellipse1, ellipse2, siber.example_N_overlap_b, 
+                                   p.interval = 0.95, n = 100)
+ellipse95.overlap
+
+# so in this case, the overlap as a proportion of the non-overlapping area of 
+# the two ellipses, would be
+prop.95.over <- ellipse95.overlap[3] / (ellipse95.overlap[2] + 
+                                          ellipse95.overlap[1] -
+                                          ellipse95.overlap[3])
+prop.95.over
+
+
+##Overlap Carboni Sofre hybrid-fin = 1.235348 (0.3872907 proportion)
+
+
+
+####
+
+demo_data <- per_C_N %>% mutate(group = per_C_N$species, 
+                                community = rep("a",39),
+                                D13C = per_C_N$D13C, 
+                                D34S = per_C_N$D34S,
+                                .keep = "unused") 
+
+first.plot <- ggplot(data = demo_data, 
+                     aes(x = D34S, 
+                         y = D13C)) + 
+  geom_point(aes(color = group), size = 2, 
+             shape = ifelse(demo_data$group == "hybrid", 16, 1),
+             #shape=1,
+             alpha=0.75) +
+  ylab(expression(paste(delta^{13}, "C (\u2030)"))) +
+  xlab(expression(paste(delta^{34}, "S (\u2030)"))) + 
+  theme(text = element_text(size=16)) + 
+  scale_color_manual(values = c("blue","red","green")) + theme_article(base_size = 20) + theme(aspect.ratio = 1/1)  + ylim(c(-21.5,-17.5)) + xlim(c(15,20))
+
+# And print our plot to screen
+print(first.plot)
+
+classic.first.plot <- first.plot + theme_classic() + 
+  theme(text = element_text(size=18))
+
+# and print to screen
+print(classic.first.plot)
+
+# use our ellipse function to generate the ellipses for plotting
+
+# decide how big an ellipse you want to draw
+p.ell <- 0.40
+p.ell2 <- 0.95
+# create our plot based on first.plot above adding the stat_ellipse() geometry.
+# We specify thee ellipse to be plotted using the polygon geom, with fill and
+# edge colour defined by our column "group", using the normal distribution and
+# with a quite high level of transparency on the fill so we can see the points
+# underneath. In order to get different ellipses plotted by both columns "group"
+# and "community" we have to use the interaction() function to ensure both are
+# considered in the aes(group = XYZ) specification. Note also the need to
+# specify the scale_fill_viridis_d() function as the mapping of colors for
+# points and lines is separate to filled objects and we want them to match.
+ellipse.plot3_p <- first.plot + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=1.25,
+               level = p.ell,
+               type = "norm",
+               #linetype = "dashed",
+               geom = "polygon") + 
+  stat_ellipse(aes(group = interaction(group, community),
+                   color = group), 
+               alpha = 0, 
+               linewidth=0.75,
+               linetype = "dotted",
+               level = p.ell2,
+               type = "norm",
+               geom = "polygon") + 
+  scale_color_manual(name = "", labels = c("Blue","Fin", "Hybrid"), values = c("blue","red","green"))  +
+  guides(color = guide_legend(override.aes = list(shape = NA))) + theme(legend.position = "none")
+
+print(ellipse.plot3_p)
+
+ellipse.plot1/ellipse.plot1_p 
+ellipse.plot2/ellipse.plot2_p
+ellipse.plot3/ellipse.plot3_p
+
+ellipse.plot1 +ellipse.plot3+ellipse.plot2
+ellipse.plot1_p +ellipse.plot2_p+ellipse.plot3_p
+
+first.plot.dens_b + first.plot.dens2_b + first.plot.dens3_b
+
+first.plot.dens + first.plot.dens2 + first.plot.dens3
+
+
+
+library(SIBER)
+library(dplyr)
+library(ggplot2)
+
+
+siber.example <- createSiberObject(data_per_niche_rover_NA_out_SIBER)
+
+# Create lists of plotting arguments to be passed onwards to each 
+# of the three plotting functions.
+community.hulls.args <- list(col = 1, lty = 1, lwd = 1)
+group.ellipses.args  <- list(n = 100, p.interval = 0.95, lty = 1, lwd = 2)
+group.hull.args      <- list(lty = 2, col = "grey20")
+
+# plot the raw data
+par(mfrow=c(1,1))
+plotSiberObject(siber.example,
+                ax.pad = 2, 
+                hulls = F, community.hulls.args, 
+                ellipses = F, group.ellipses.args,
+                group.hulls = F, group.hull.args,
+                bty = "o",
+                iso.order = c(1,2),
+                xlab = expression({delta}^13*C~'(\u2030)'),
+                ylab = expression({delta}^15*N~'(\u2030)')
+)
+
+
+# You can add more ellipses by directly calling plot.group.ellipses()
+# Add an additional p.interval % prediction ellilpse
+plotGroupEllipses(siber.example, n = 100, p.interval = 0.40,
+                  lty = 1, lwd = 4)
+
+# or you can add the XX% confidence interval around the bivariate means
+# by specifying ci.mean = T along with whatever p.interval you want.
+#plotGroupEllipses(siber.example, n = 100, p.interval = 0.95,
+                  ci.mean = T, lty = 1, lwd = 2)
+
+# Calculate sumamry statistics for each group: TA, SEA and SEAc
+group.ML <- groupMetricsML(siber.example)
+print(group.ML)
+
+# add a legend
+legend("topright", colnames(group.ML), 
+       pch = c(1,1,1,2,2,2), col = c(1:3, 1:3), lty = 1)
+
+
+## ----fit-bayes----------------------------------------------------------------
+
+# options for running jags
+parms <- list()
+parms$n.iter <- 2 * 10^4   # number of iterations to run the model for
+parms$n.burnin <- 1 * 10^3 # discard the first set of values
+parms$n.thin <- 10     # thin the posterior by this many
+parms$n.chains <- 2        # run this many chains
+
+# define the priors
+priors <- list()
+priors$R <- 1 * diag(2)
+priors$k <- 2
+priors$tau.mu <- 1.0E-3
+
+# fit the ellipses which uses an Inverse Wishart prior
+# on the covariance matrix Sigma, and a vague normal prior on the 
+# means. Fitting is via the JAGS method.
+ellipses.posterior <- siberMVN(siber.example, parms, priors)
+
+
+## ----plot-data, fig.width = 10, fig.height = 6--------------------------------
+# 
+# ----------------------------------------------------------------
+# Plot out some of the data and results
+# ----------------------------------------------------------------
+
+# The posterior estimates of the ellipses for each group can be used to
+# calculate the SEA.B for each group.
+SEA.B <- siberEllipses(ellipses.posterior)
+
+siberDensityPlot(SEA.B, xticklabels = colnames(group.ML), 
+                 xlab = c("Community | Group"),
+                 ylab = expression("Standard Ellipse Area " ('(\u2030)' ^2) ),
+                 bty = "L",
+                 las = 1,
+                 main = "SIBER ellipses on each group"
+)
+
+# Add red x's for the ML estimated SEA-c
+points(1:ncol(SEA.B), group.ML[3,], col="red", pch = "x", lwd = 2)
+
+# Calculate some credible intervals 
+cr.p <- c(0.95, 0.99) # vector of quantiles
+
+# call to hdrcde:hdr using lapply()
+SEA.B.credibles <- lapply(
+  as.data.frame(SEA.B), 
+  function(x,...){tmp<-hdrcde::hdr(x)$hdr},
+  prob = cr.p)
+
+print(SEA.B.credibles)
+
+# do similar to get the modes, taking care to pick up multimodal posterior
+# distributions if present
+SEA.B.modes <- lapply(
+  as.data.frame(SEA.B), 
+  function(x,...){tmp<-hdrcde::hdr(x)$mode},
+  prob = cr.p, all.modes=T)
+
+print(SEA.B.modes)
+
+## ----prob-diff-g12------------------------------------------------------------
+Pg1.1_lt_g1.2 <- sum( SEA.B[,1] < SEA.B[,2] ) / nrow(SEA.B)
+print(Pg1.1_lt_g1.2)
+
+## ----prob-diff-g13------------------------------------------------------------
+Pg1.1_lt_g1.3 <- sum( SEA.B[,1] < SEA.B[,3] ) / nrow(SEA.B)
+print(Pg1.1_lt_g1.3)
+
+## ----prob-diff-all------------------------------------------------------------
+Pg1.1_lt_g2.1 <- sum( SEA.B[,1] < SEA.B[,4] ) / nrow(SEA.B)
+print(Pg1.1_lt_g2.1)
+
+Pg1.2_lt_g1.3 <- sum( SEA.B[,2] < SEA.B[,3] ) / nrow(SEA.B)
+print(Pg1.2_lt_g1.3)
+
+Pg1.3_lt_g2.1 <- sum( SEA.B[,3] < SEA.B[,4] ) / nrow(SEA.B)
+print(Pg1.3_lt_g2.1)
+
+Pg2.2_lt_g2.3 <- sum( SEA.B[,5] < SEA.B[,6] ) / nrow(SEA.B)
+print(Pg2.2_lt_g2.3)
+
+
+## ----ML-overlap---------------------------------------------------------------
+
+overlap.G1.2.G1.3 <- maxLikOverlap("1.2", "1.3", siber.example, p = 0.95, n =)
+
+
+## ----ML-overlap-proportions---------------------------------------------------
+prop.of.first <- as.numeric(overlap.G1.2.G1.3["overlap"] / overlap.G1.2.G1.3["area.1"])
+print(prop.of.first)
+
+prop.of.second <- as.numeric(overlap.G1.2.G1.3["overlap"] / overlap.G1.2.G1.3["area.2"])
+print(prop.of.second)
+
+prop.of.both <- as.numeric(overlap.G1.2.G1.3["overlap"] / (overlap.G1.2.G1.3["area.1"] + overlap.G1.2.G1.3["area.2"]))
+print(prop.of.both)
+
+## ----bayesian-overlap---------------------------------------------------------
+bayes.overlap.G2.G3 <- bayesianOverlap("1.2", "1.3", ellipses.posterior, 
+                                       draws = 10, p.interval = 0.95,
+                                       n = 360)
+print(bayes.overlap.G2.G3)
+
+
+
+##
 # set the number of posterior samples that will be taken 
 nsample <- 1000
 
@@ -352,9 +1449,8 @@ nsample <- 1000
 # ---- Use map from purrr and niw.post from nicheROVER to estimate niches ----- 
 fish_par <- data_per_niche_rover_NA_out %>% 
   split(.$species) %>% 
-  map(~ dplyr::select(., D15N, D13C, D34S)) %>% 
-  map(~niw.post(nsample = nsample, X = .))
-
+  purrr::map(~ dplyr::select(., D15N, D13C, D34S)) %>% 
+  purrr::map(~niw.post(nsample = nsample, X = .))
 
 # ---- Extract mu from nicheROVER object ----- 
 df_mu <- map(fish_par, pluck, 1) %>% 
@@ -1091,3 +2187,4 @@ Niche_size <- ggplot(data = niche_size_df) +
 
 ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/png/Niche_size.png", Niche_size, 
        device = png(width = 800, height = 600))
+
