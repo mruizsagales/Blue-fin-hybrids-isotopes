@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ library(lmerTest)
 library(effects)
 library(lvmisc)
 
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/2code")
 source("03_Suess_Laws_effect_correction.R")
 df
 
@@ -145,4 +145,5 @@ pS
 ptot <- pN / pC / pS
 ptot
 
-#ggsave("/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/predictions_N_C_S.svg", plot = last_plot(), dpi = 300, width = 10, height = 15, units = "cm", device = "svg")
+#ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/predictions_N_C_S.svg", plot = last_plot(), dpi = 300, width = 10, height = 15, units = "cm", device = "svg")
+

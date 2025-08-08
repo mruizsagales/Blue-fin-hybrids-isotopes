@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ jj <- ggplot(data=df, aes(x = yday, col = Sp, fill = Sp)) +
 kk + jj + plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 10))
 
-# ggsave("/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/catches_denisty.svg", last_plot(), 
+# ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/catches_denisty.svg", last_plot(), 
 #        dpi = 300,  width = 17, height = 12, units = "cm")
 
 # b) Time

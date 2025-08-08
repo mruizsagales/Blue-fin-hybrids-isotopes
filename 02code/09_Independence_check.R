@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -10,7 +10,7 @@ library(tidyverse)
 library(lmtest)
 library(tidybayes)
 
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/02code")
 source("03_Suess_Laws_effect_correction.R")
 df
 
@@ -143,12 +143,11 @@ p1 <- ggplot() +
   geom_vline(xintercept = 0, linetype = "dashed", color="grey") +
   theme_minimal() +
   labs(x = "Increase of niche overlap (%) in subsampled datasets",
-       y = "Subset") + theme_article(base_size = 10, base_family = "Helvetica") + theme(aspect.ratio = 3/4, axis.text.y = element_blank())
+       y = "Subset") + theme_article(base_size = 10, base_family = "Optima") + theme(aspect.ratio = 3/4, axis.text.y = element_blank())
 
 p1
 
-# ggsave("/Users/marcruizisagales/Desktop/hybrids/overlap_subset.pdf", p1, 
-#        dpi = 300,  width = 12, height = 8, units = "cm")
+# ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/overlap_subset.svg", p1, dpi = 300,  width = 15, height = 15, units = "cm")
 
 # Posterior niche sizes for each subset
 get_niche_sizes <- function(df) {
@@ -176,14 +175,12 @@ p2 <- ggplot(niche_size_long, aes(x = SEA, y = as.character(subset), color = Spe
   tidybayes::stat_pointinterval(point_interval = mean_qi, alpha = 1, size=0.5) +
   geom_vline(data = full_summary, aes(xintercept = MeanSEA), linetype = "dashed", color="black") +
   facet_wrap(vars(Species)) +
-  theme_article(base_size = 10, base_family = "Helvetica") +
+  theme_article(base_size = 10, base_family = "Optima") +
   labs(x = "Standard Ellipse Area (‰²)", y = "Dataset") + theme(axis.text.y = element_blank(), aspect.ratio = 4/1, legend.position = "none") + ggplot2::scale_color_manual(values = species_colors)
 p2
 
-# ggsave("/Users/marcruizisagales/Desktop/hybrids/SEA_subset.pdf", p2, 
-#        dpi = 300,  width = 10, height = 10, units = "cm")
-
-
+# ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/SEA_subset.svg", p2, dpi = 300,  width = 10, height = 30, units = "cm")
+# 
 
 clean_subsets
 subset_mu_df <- purrr::map_dfr(seq_along(clean_subsets), function(i) {
@@ -199,8 +196,8 @@ subset_mu_df <- purrr::map_dfr(seq_along(clean_subsets), function(i) {
 
 mu_long_subsets <- tidyr::pivot_longer(subset_mu_df, cols = all_of(iso_vars), names_to = "Isotope", values_to = "Value")
 
-full_mu <- split(1:nrow(fish), fish$species) %>%
-  purrr::map(~ nicheROVER::niw.post(nsamples = 1000, X = fish[.x, iso_vars]))
+full_mu <- split(1:nrow(whale1), whale1$species) %>%
+  purrr::map(~ nicheROVER::niw.post(nsamples = 1000, X = whale1[.x, iso_vars]))
 
 # Posterior means per species and isotope
 mu_summary <- purrr::map_dfr(names(full_mu), function(sp) {
@@ -226,7 +223,7 @@ pN <- ggplot2::ggplot(
     ggplot2::aes(xintercept = mu_mean, linetype = Species),
     color = "black"
   ) +
-  theme_article(base_size = 10) +
+  theme_article(base_size = 10, base_family = "Optima") +
   ggplot2::labs(x = expression(paste(delta^15, "N (", "\u2030", ")")), y = "Dataset") + scale_x_continuous(breaks = seq(7.5, 11.5, by = 1)) + ggplot2::scale_color_manual(values = species_colors) + theme(legend.position = "none", axis.text.y = element_blank(), aspect.ratio = 4/1) 
 
 # 2. δ13C plot
@@ -240,7 +237,7 @@ pC <- ggplot2::ggplot(
     ggplot2::aes(xintercept = mu_mean, linetype = Species),
     color = "black"
   ) +
-  theme_article(base_size = 10) +
+  theme_article(base_size = 10, base_family = "Optima") +
   ggplot2::labs(x = expression(paste(delta^13, "C (", "\u2030", ")")), y = "") + scale_x_continuous(breaks = seq(-20.5, -18.5, by = 0.25)) + ggplot2::scale_color_manual(values = species_colors) + theme(legend.position = "none", axis.text.y = element_blank()) 
 
 # 3. δ34S plot
@@ -254,7 +251,7 @@ pS <- ggplot2::ggplot(
     ggplot2::aes(xintercept = mu_mean, linetype = Species),
     color = "black"
   ) +
-  theme_article(base_size = 10) +
+  theme_article(base_size = 10, base_family = "Optima") +
   ggplot2::labs(x = expression(paste(delta^34, "S (", "\u2030", ")")),y = "") + 
   ggplot2::guides(color = ggplot2::guide_legend(title = "Subset Posterior"),
                   linetype = ggplot2::guide_legend(title = "Full Dataset Mean",legend.direction = "horizontal")) + 
@@ -266,5 +263,5 @@ pS <- ggplot2::ggplot(
 p3 <- pN + theme(aspect.ratio = 4/1) +pC+ theme(aspect.ratio = 4/1) + pS+ theme(aspect.ratio = 4/1)
 p3
 
-# ggsave("/Users/marcruizisagales/Desktop/hybrids/Posterior_mean_subset.pdf", p3, 
-#        dpi = 300,  width = 30, height = 10, units = "cm")
+# ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/Posterior_mean_subset.svg", p3, dpi = 300,  width = 15, height = 30, units = "cm")
+ 

@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -8,7 +8,7 @@
 
 library(patchwork)
 
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/code2")
 source("03_Suess_Laws_effect_correction.R")
 df
 
@@ -455,7 +455,7 @@ plottogheter1 <- plottogheter1 +
 
 plottogheter1
 
-#ggsave("/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/plot_ellipses.svg", plot = plottogheter1, dpi = 300, width = 16, height = 15, units = "cm", device = "svg")
+#ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/plot_ellipses.svg", plot = plottogheter1, dpi = 300, width = 16, height = 15, units = "cm", device = "svg")
 
 # estimate also 95% ellipses
 
@@ -658,6 +658,6 @@ niche_size_and_overlap_plot <- ov + ns + plot_annotation(tag_levels = 'A') &
 
 niche_size_and_overlap_plot
 
-#ggsave("/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/plot_niche_size_overlap.svg", plot = niche_size_and_overlap_plot, dpi = 300, width = 16, height = 15, units = "cm", device = "svg")
+#ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/plot_niche_size_overlap.svg", plot = niche_size_and_overlap_plot, dpi = 300, width = 16, height = 15, units = "cm", device = "svg")
 
 

@@ -1,5 +1,5 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
@@ -10,7 +10,7 @@ library(pheatmap)
 library(viridis)
 library(gridExtra)
 
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/02code")
 source("03_Suess_Laws_effect_correction.R")
 df
 
@@ -56,6 +56,6 @@ d<- pheatmap(dist_mat,
          show_colnames = TRUE,
          fontsize = 8,
          color = alpha_colors
-         #filename = "/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/similarity_heatmap.pdf"
+         #filename = "/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/similarity_heatmap.pdf"
          ) 
 d

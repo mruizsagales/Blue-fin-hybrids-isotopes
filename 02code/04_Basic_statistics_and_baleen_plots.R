@@ -1,11 +1,11 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
 # 04 - Basic statistics and plots of the baleen isotopes per individual
 #--------------------------------------------------------------------------------
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/02code")
 source("03_Suess_Laws_effect_correction.R")
 
 df
@@ -130,4 +130,4 @@ p2
 plot_ind_N_C_S = p/p1/p2 + plot_annotation(tag_levels = 'A') 
 plot_ind_N_C_S
 
-#ggsave("/Users/marcruizisagales/Dropbox/00_papers/2023_hybrids_SIA_baleen/Final_plots/plot_ind_N_C_S.svg", plot = plot_ind_N_C_S, dpi = 300, width = 15, height = 20, units = "cm", device = "svg")
+#ggsave("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/03figures/plot_ind_N_C_S.svg", plot = plot_ind_N_C_S, dpi = 300, width = 15, height = 20, units = "cm", device = "svg")

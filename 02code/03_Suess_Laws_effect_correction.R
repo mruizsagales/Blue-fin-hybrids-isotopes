@@ -1,11 +1,11 @@
 #--------------------------------------------------------------------------------
-# Baleen SIA in fin and blue whale hybrids (Marc Ruiz-Sagalés, 6 de juny del 2025)
+# Baleen SIA in fin and blue whale hybrids 
 #--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
 # 03 - Suess and Laws effect correction
 #--------------------------------------------------------------------------------
-setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes")
+setwd("/Users/marcruizisagales/Documents/GitHub/Blue-fin-hybrids-isotopes/02code")
 source("02_Time_estimation.R")
 
 combined_df$id <- seq.int(nrow(combined_df)) # add a sequence number to each row
